@@ -6,7 +6,7 @@
 /*   By: arudy <arudy@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/13 14:02:26 by arudy             #+#    #+#             */
-/*   Updated: 2022/05/18 18:47:30 by arudy            ###   ########.fr       */
+/*   Updated: 2022/05/19 12:08:33 by arudy            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,31 +129,46 @@ void	render_player(t_data *data)
 	// }
 }
 
+float	dist(float ax, float ay, float bx, float by, float angle)
+{
+	(void)angle;
+	return (sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay)));
+}
+
 void	render_ray(t_data *data)
 {
-	(void)data;
 	int		i;
 	int		r;
 	float		x;
 	float		y;
 	float	tan_a;
 	float	tan_n;
-
+	float	disH = 100000;
+	float	hx = data->player->x;
+	float	hy = data->player->y;
+	float	disV = 100000;
+	float	vx = data->player->x;
+	float	vy = data->player->y;
 
 	(void)x;
 	(void)y;
 	(void)i;
+	(void)disH;
+	(void)hx;
+	(void)hy;
+	(void)disV;
+	(void)vx;
+	(void)vy;
 	(void)tan_a;
 	(void)tan_n;
 	r = 0;
+	data->ray->angle = data->player->angle;
 	while (data->player->change && r < 1)
 	{
-		data->ray->angle = data->player->angle;
 		data->ray->r = 0;
 		// ===================== check horizontal =================================
 		data->ray->dof = 0;
 		tan_a = -1 / tan(data->ray->angle);
-		// printf("ANGLE 1 : %f\n", data->ray->angle);
 		if (data->ray->angle > PI) // looking up
 		{
 			data->ray->y = (((int)data->player->y >> 6) << 6) - 0.0001;
@@ -179,110 +194,112 @@ void	render_ray(t_data *data)
 			data->ray->mx = (int)data->ray->x >> 6;
 			data->ray->my = (int)data->ray->y >> 6;
 			data->ray->mp = data->ray->my * data->map_fd->width + data->ray->mx;
-			if (data->ray->mp < data->map_fd->width * data->map_fd->height && data->m[data->ray->mp] == '1')
+			if (data->ray->mp > 0 && data->ray->mp < data->map_fd->width * data->map_fd->height && data->m[data->ray->mp] == '1')
 			{
+				hx = data->ray->x;
+				hy = data->ray->y;
+				disH = dist(data->player->x, data->player->y, hx, hy, data->ray->angle);
 				data->ray->dof = data->map_fd->width;
 			}
 			else
 			{
-				// printf("ray xo : %f\n", data->ray->xo);
 				data->ray->x += data->ray->xo;
-				// printf("ANGLE : %f\n", data->ray->angle);
 				data->ray->y += data->ray->yo;
 				data->ray->dof += 1;
 			}
 		}
 
 
-		x = data->player->old_x;
-		y = data->player->old_y;
-		if (data->ray->old_y && y < data->ray->old_y)
-		{
-			while (y < data->ray->old_y)
-			{
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (WHITE >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (WHITE >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (WHITE >> 24) & 0xFF;
-				if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy / 5;
-				else
-					break ;
-				if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
-					x += data->player->old_dx / 5;
-			}
-		}
-		else if (data->ray->old_y)
-		{
-			while (y > data->ray->old_y)
-			{
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (WHITE >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (WHITE >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (WHITE >> 24) & 0xFF;
-				if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy / 5;
-				else
-					break ;
-				if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
-					x += data->player->old_dx / 5;
-			}
-		}
+		// x = data->player->old_x;
+		// y = data->player->old_y;
+		// if (data->ray->old_y && y < data->ray->old_y)
+		// {
+		// 	while (y < data->ray->old_y)
+		// 	{
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (WHITE >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (WHITE >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (WHITE >> 24) & 0xFF;
+		// 		if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+		// 			x += data->player->old_dx / 5;
+		// 	}
+		// }
+		// else if (data->ray->old_y)
+		// {
+		// 	while (y > data->ray->old_y)
+		// 	{
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (WHITE >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (WHITE >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (WHITE >> 24) & 0xFF;
+		// 		if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+		// 			x += data->player->old_dx / 5;
+		// 	}
+		// }
 
 
-		data->ray->old_x = data->ray->x;
-		data->ray->old_y = data->ray->y;
-		x = data->player->x;
-		y = data->player->y;
-		if (y < data->ray->y)
-		{
-			while (y < data->ray->y)
-			{
-				// printf("1\n");
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (BLACK >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (BLACK >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (BLACK >> 24) & 0xFF;
-				if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy / 5;
-				else
-					break ;
-				if (x >= 0 && x <= (64 * data->map_fd->width - (data->player->x / 64)))
-					x += data->player->dx / 5;
-			}
-			break ;
-		}
-		else
-		{
-			while (y > data->ray->y)
-			{
-				// printf("2\n");
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (BLACK >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (BLACK >> 16 ) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (BLACK >> 24) & 0xFF;
-				if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy / 5;
-				else
-					break ;
-				if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
-					x += data->player->dx / 5;
-			}
-		}
+		// data->ray->old_x = data->ray->x;
+		// data->ray->old_y = data->ray->y;
+		// x = data->player->x;
+		// y = data->player->y;
+		// if (y < data->ray->y)
+		// {
+		// 	while (y < data->ray->y)
+		// 	{
+		// 		// printf("1\n");
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (BLACK >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (BLACK >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (BLACK >> 24) & 0xFF;
+		// 		if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x >= 0 && x <= (64 * data->map_fd->width - (data->player->x / 64)))
+		// 			x += data->player->dx / 5;
+		// 	}
+		// 	break ;
+		// }
+		// else
+		// {
+		// 	while (y > data->ray->y)
+		// 	{
+		// 		// printf("2\n");
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (BLACK >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (BLACK >> 16 ) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (BLACK >> 24) & 0xFF;
+		// 		if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
+		// 			x += data->player->dx / 5;
+		// 	}
+		// }
 
 
 		// // ===================== check vertical =================================
-
+		data->ray->r = 0;
 		data->ray->dof = 0;
 		tan_n = -tan(data->ray->angle);
+		// printf("ANGLE : %f\n", data->player->angle);
 		if (data->ray->angle > PI / 2 && data->ray->angle < 3 * PI / 2) // looking up
 		{
 			data->ray->x = (((int)data->player->x >> 6) << 6) - 0.0001;
@@ -292,7 +309,7 @@ void	render_ray(t_data *data)
 		}
 		else if (data->ray->angle < PI / 2 || data->ray->angle > 3 * PI / 2) // looking down
 		{
-			data->ray->x = (((int)data->player->y >> 6) << 6) + 64;
+			data->ray->x = (((int)data->player->x >> 6) << 6) + 64;
 			data->ray->y = (data->player->x - data->ray->x) * tan_n + data->player->y;
 			data->ray->xo = 64;
 			data->ray->yo = -data->ray->xo * tan_n;
@@ -309,7 +326,12 @@ void	render_ray(t_data *data)
 			data->ray->my = (int)data->ray->y >> 6;
 			data->ray->mp = data->ray->my * data->map_fd->width + data->ray->mx;
 			if (data->ray->mp > 0 && data->ray->mp < data->map_fd->width * data->map_fd->height && data->m[data->ray->mp] == '1')
+			{
+				vx = data->ray->x;
+				vy = data->ray->y;
+				disV = dist(data->player->x, data->player->y, vx, vy, data->ray->angle);
 				data->ray->dof = data->map_fd->width;
+			}
 			else
 			{
 				data->ray->x += data->ray->xo;
@@ -317,89 +339,265 @@ void	render_ray(t_data *data)
 				data->ray->dof += 1;
 			}
 		}
-		x = data->player->old_x;
-		y = data->player->old_y;
 
 
-		if (data->ray->old_x && x < data->ray->old_x)
+		if (disV < disH)
 		{
-			while (x < data->ray->old_x)
+			data->ray->x = vx;
+			data->ray->y = vy;
+			x = data->player->old_x;
+			y = data->player->old_y;
+			if (data->ray->old_y && y < data->ray->old_y)
 			{
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
-				if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy / 5;
-				else
-					break ;
-				if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
-					x += data->player->old_dx / 5;
+				while (y < data->ray->old_y)
+				{
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (WHITE >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (WHITE >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (WHITE >> 24) & 0xFF;
+					if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy / 5;
+					else
+						break ;
+					if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+						x += data->player->old_dx / 5;
+				}
 			}
-		}
-		else if (data->ray->old_x)
-		{
-			while (x < data->ray->old_x)
+			else if (data->ray->old_y)
 			{
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
-				if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
-					y += data->player->old_dy / 5;
-				else
-					break ;
-				if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
-					x += data->player->old_dx / 5;
+				while (y > data->ray->old_y)
+				{
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (WHITE >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (WHITE >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (WHITE >> 24) & 0xFF;
+					if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy / 5;
+					else
+						break ;
+					if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+						x += data->player->old_dx / 5;
+				}
 			}
-		}
-		data->ray->old_x = data->ray->x;
-		data->ray->old_y = data->ray->y;
-		x = data->player->x;
-		y = data->player->y;
-		if (x < data->ray->x)
-		{
-			while (x < data->ray->x)
+			data->ray->old_x = data->ray->x;
+			data->ray->old_y = data->ray->y;
+			x = data->player->x;
+			y = data->player->y;
+			if (y < data->ray->y)
 			{
-				// printf("1\n");
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (RED) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((RED) >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((RED) >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((RED) >> 24) & 0xFF;
-				if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy / 5;
-				else
-					break ;
-				if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
-					x += data->player->dx / 5;
+				while (y < data->ray->y)
+				{
+					// printf("1\n");
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (BLACK >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (BLACK >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (BLACK >> 24) & 0xFF;
+					if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy / 5;
+					else
+						break ;
+					if (x >= 0 && x <= (64 * data->map_fd->width - (data->player->x / 64)))
+						x += data->player->dx / 5;
+				}
+				break ;
 			}
-			break ;
+			else
+			{
+				while (y > data->ray->y)
+				{
+					// printf("2\n");
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = (BLACK >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = (BLACK >> 16 ) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = (BLACK >> 24) & 0xFF;
+					if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy / 5;
+					else
+						break ;
+					if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
+						x += data->player->dx / 5;
+				}
+			}
+
+
+
 		}
 		else
 		{
-			while (x > data->ray->x)
+			data->ray->x = hx;
+			data->ray->y = hy;
+
+			x = data->player->old_x;
+			y = data->player->old_y;
+			if (data->ray->old_x && x < data->ray->old_x)
 			{
-				// printf("2\n");
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (RED) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((RED) >> 8) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((RED) >> 16) & 0xFF;
-				data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((RED) >> 24) & 0xFF;
-				if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy;
-				else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
-					y += data->player->dy / 5;
-				else
-					break ;
-				if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
-					x += data->player->dx / 5;
+				while (x < data->ray->old_x)
+				{
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
+					if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy / 5;
+					else
+						break ;
+					if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+						x += data->player->old_dx / 5;
+				}
+			}
+			else if (data->ray->old_x)
+			{
+				while (x < data->ray->old_x)
+				{
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (BLACK) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((BLACK) >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((BLACK) >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((BLACK) >> 24) & 0xFF;
+					if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+						y += data->player->old_dy / 5;
+					else
+						break ;
+					if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+						x += data->player->old_dx / 5;
+				}
+			}
+			data->ray->old_x = data->ray->x;
+			data->ray->old_y = data->ray->y;
+			x = data->player->x;
+			y = data->player->y;
+			if (x < data->ray->x)
+			{
+				while (x < data->ray->x)
+				{
+					// printf("1\n");
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
+					if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy / 5;
+					else
+						break ;
+					if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
+						x += data->player->dx / 5;
+				}
+				break ;
+			}
+			else
+			{
+				while (x > data->ray->x)
+				{
+					// printf("2\n");
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
+					data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
+					if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy;
+					else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+						y += data->player->dy / 5;
+					else
+						break ;
+					if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
+						x += data->player->dx / 5;
+				}
 			}
 		}
+		// x = data->player->old_x;
+		// y = data->player->old_y;
+		// if (data->ray->old_x && x < data->ray->old_x)
+		// {
+		// 	while (x < data->ray->old_x)
+		// 	{
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
+		// 		if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+		// 			x += data->player->old_dx / 5;
+		// 	}
+		// }
+		// else if (data->ray->old_x)
+		// {
+		// 	while (x < data->ray->old_x)
+		// 	{
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (WHITE) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((WHITE) >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((WHITE) >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((WHITE) >> 24) & 0xFF;
+		// 		if (data->player->old_dy < 0.03 && data->player->old_dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->old_y / 64)))
+		// 			y += data->player->old_dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x > 0 && x < (64 * data->map_fd->width - (data->player->old_x / 64)))
+		// 			x += data->player->old_dx / 5;
+		// 	}
+		// }
+		// data->ray->old_x = data->ray->x;
+		// data->ray->old_y = data->ray->y;
+		// x = data->player->x;
+		// y = data->player->y;
+		// if (x < data->ray->x)
+		// {
+		// 	while (x < data->ray->x)
+		// 	{
+		// 		// printf("1\n");
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (RED) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((RED) >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((RED) >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((RED) >> 24) & 0xFF;
+		// 		if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
+		// 			x += data->player->dx / 5;
+		// 	}
+		// 	break ;
+		// }
+		// else
+		// {
+		// 	while (x > data->ray->x)
+		// 	{
+		// 		// printf("2\n");
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 0] = (RED) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 1] = ((RED) >> 8) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 2] = ((RED) >> 16) & 0xFF;
+		// 		data->mlx->addr[(((int)y * data->mlx->line_length) + ((int)x * data->mlx->bpp / 8)) + 3] = ((RED) >> 24) & 0xFF;
+		// 		if (data->player->dy < 0.03 && data->player->dy > -0.03 && y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy;
+		// 		else if (y > 0 && y < (64 * data->map_fd->height - (data->player->y / 64)))
+		// 			y += data->player->dy / 5;
+		// 		else
+		// 			break ;
+		// 		if (x >= 0 && x < (64 * data->map_fd->width - (data->player->x / 64)))
+		// 			x += data->player->dx / 5;
+		// 	}
+		// }
 		r++;
 	}
 	data->player->change = 0;

@@ -6,7 +6,7 @@
 /*   By: arudy <arudy@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/11 10:09:54 by lleveque          #+#    #+#             */
-/*   Updated: 2022/05/18 15:19:13 by arudy            ###   ########.fr       */
+/*   Updated: 2022/05/19 10:04:44 by arudy            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 // # define SPEED_TEST 0.0002
 # define ROTATE_SPEED_TEST 0.001
 # define PI					3.1415926535
+// # define PI						3.14159265358979323846264338327950288419716939937510582
 # define SPEED_TEST			0.005
 // # define ROTATE_SPEED_TEST	0.1
 # define RED				0x00FF7F7F
