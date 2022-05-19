@@ -6,7 +6,7 @@
 /*   By: arudy <arudy@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/11 10:09:54 by lleveque          #+#    #+#             */
-/*   Updated: 2022/05/19 12:18:50 by arudy            ###   ########.fr       */
+/*   Updated: 2022/05/19 15:05:05 by arudy            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,5 +36,7 @@
 # define WHITE				0x00FFFFFF
 # define BLACK				0x00000000
 # define GREY				0x007F7F7F
+# define GREEN				0x0000FF00
+# define BLUE				0x000000FF
 
 #endif
